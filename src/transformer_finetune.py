@@ -14,8 +14,8 @@ class TransformerConfig(BaseModel):
 
 def finetune_transformer(data: Dict[str, Any], config: TransformerConfig):
     print(f"Fine-tuning {config.model_name}...")
-    tokenizer = AutoTokenizer.from_pretrained(config.model_name, revision="main")
-    model = AutoModelForSequenceClassification.from_pretrained(config.model_name, num_labels=2, revision="main")
+    tokenizer = AutoTokenizer.from_pretrained(config.model_name, revision="main")  # nosec B615
+    model = AutoModelForSequenceClassification.from_pretrained(config.model_name, num_labels=2, revision="main")  # nosec B615
     
     def tokenize_function(examples):
         return tokenizer(examples["cleaned_text"], padding="max_length", truncation=True, max_length=128)

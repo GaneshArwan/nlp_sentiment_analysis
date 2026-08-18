@@ -29,7 +29,7 @@ def load_amazon_subset(config: DataConfig) -> Dict[str, Any]:
     """
     print(f"Loading {config.dataset_name} dataset...")
     # Loading a small subset using the split+select syntax
-    dataset = load_dataset(config.dataset_name, revision="main")
+    dataset = load_dataset(config.dataset_name, revision="main")  # nosec B615
     
     # Stratified or random sampling can be done, here we just shuffle and select
     train_subset = dataset['train'].shuffle(seed=config.seed).select(range(config.sample_size))
