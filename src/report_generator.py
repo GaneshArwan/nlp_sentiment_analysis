@@ -3,9 +3,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, Table, TableStyle, PageBreak
+from reportlab.platypus import BaseDocTemplate, PageTemplate, Frame, Paragraph, Spacer, Image, Table, TableStyle, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
 from reportlab.lib import colors
+from reportlab.lib.units import inch
 import numpy as np
 
 def generate_charts(baseline_metrics, transformer_metrics):
@@ -25,7 +27,7 @@ def generate_charts(baseline_metrics, transformer_metrics):
     t_f1 = transformer_metrics['eval_f1']
     
     data = []
-    models = ['LR (Baseline)', 'NB (Baseline)', 'DistilBERT (Advanced)']
+    models = ['LR', 'NB', 'DistilBERT']
     metrics = ['Accuracy', 'Precision', 'Recall', 'F1-Score']
     
     for model, scores in zip(models, [[lr_acc, lr_p, lr_r, lr_f1], [nb_acc, nb_p, nb_r, nb_f1], [t_acc, t_p, t_r, t_f1]]):
@@ -34,26 +36,25 @@ def generate_charts(baseline_metrics, transformer_metrics):
             
     df = pd.DataFrame(data)
     
-    plt.figure(figsize=(9, 5))
-    sns.set_style("whitegrid")
-    ax = sns.barplot(data=df, x='Model', y='Score', hue='Metric', palette='viridis')
-    plt.title('Comprehensive Model Evaluation Landscape', fontsize=14, pad=15)
-    plt.ylabel('Score', fontsize=12)
+    # Academic style plot
+    plt.figure(figsize=(4, 3))
+    sns.set_style("ticks")
+    ax = sns.barplot(data=df, x='Model', y='Score', hue='Metric', palette='colorblind')
+    plt.title('Fig. 1. Model Evaluation Metrics', fontsize=10, pad=10, fontweight='bold', family='serif')
+    plt.ylabel('Score', fontsize=9, family='serif')
+    plt.xlabel('Model Architecture', fontsize=9, family='serif')
     plt.ylim(0, 1.1)
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.xticks(fontsize=8, family='serif')
+    plt.yticks(fontsize=8, family='serif')
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', prop={'family': 'serif', 'size': 8})
     
-    for p in ax.patches:
-        height = p.get_height()
-        if height > 0:
-            ax.annotate(f'{height:.2f}', (p.get_x() + p.get_width() / 2., height), 
-                        ha='center', va='bottom', fontsize=9, xytext=(0, 3), textcoords='offset points', rotation=0)
-                    
+    sns.despine()
     plt.tight_layout()
-    plt.savefig('accuracy_chart.png', dpi=300)
+    plt.savefig('accuracy_chart.png', dpi=300, bbox_inches='tight')
     plt.close()
 
-def generate_pdf_report():
-    print("Generating Professional Decision-Grade PDF Report...")
+def build_pdf_report():
+    print("Generating IEEE-Style Academic Report...")
     with open('baseline_metrics.json', 'r') as f:
         baseline_metrics = json.load(f)
     with open('lda_topics.json', 'r') as f:
@@ -63,130 +64,151 @@ def generate_pdf_report():
 
     generate_charts(baseline_metrics, transformer_metrics)
 
-    doc = SimpleDocTemplate("report.pdf", pagesize=letter, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=40)
+    # Document setup (Letter size, half inch margins)
+    margin = 0.5 * inch
+    doc = BaseDocTemplate("report.pdf", pagesize=letter,
+                          rightMargin=margin, leftMargin=margin,
+                          topMargin=margin, bottomMargin=margin)
+
+    # Define frames for two-column layout
+    frame_width = (doc.width - 0.25 * inch) / 2
+    frame_height = doc.height
+    
+    frameT = Frame(doc.leftMargin, doc.bottomMargin, doc.width, doc.height, id='normal')
+    frame1 = Frame(doc.leftMargin, doc.bottomMargin, frame_width, frame_height, id='col1')
+    frame2 = Frame(doc.leftMargin + frame_width + 0.25 * inch, doc.bottomMargin, frame_width, frame_height, id='col2')
+    
+    doc.addPageTemplates([
+        PageTemplate(id='OneCol', frames=frameT),
+        PageTemplate(id='TwoCol', frames=[frame1, frame2]),
+    ])
+
     styles = getSampleStyleSheet()
     
-    # Custom Styles
-    title_style = ParagraphStyle('CustomTitle', parent=styles['Heading1'], fontSize=22, spaceAfter=20, alignment=0, textColor=colors.HexColor('#1a252f'), fontName='Helvetica-Bold')
-    h1_style = ParagraphStyle('CustomH1', parent=styles['Heading2'], fontSize=16, spaceBefore=20, spaceAfter=10, textColor=colors.HexColor('#2c3e50'), fontName='Helvetica-Bold', borderPadding=5, backColor=colors.HexColor('#ecf0f1'))
-    h2_style = ParagraphStyle('CustomH2', parent=styles['Heading3'], fontSize=14, spaceBefore=15, spaceAfter=8, textColor=colors.HexColor('#34495e'), fontName='Helvetica-Bold')
-    body_style = ParagraphStyle('CustomBody', parent=styles['BodyText'], fontSize=11, spaceAfter=12, leading=16, fontName='Helvetica')
-    bullet_style = ParagraphStyle('CustomBullet', parent=styles['Bullet'], fontSize=11, spaceAfter=8, leading=16, fontName='Helvetica', bulletIndent=10, leftIndent=25)
+    # IEEE Styles (Times Roman)
+    title_style = ParagraphStyle('IEEETitle', fontName='Times-Bold', fontSize=24, leading=28, alignment=TA_CENTER, spaceAfter=12)
+    author_style = ParagraphStyle('IEEEAuthor', fontName='Times-Roman', fontSize=11, leading=14, alignment=TA_CENTER, spaceAfter=24)
+    abstract_heading = ParagraphStyle('IEEEAbstractH', fontName='Times-BoldItalic', fontSize=9, leading=11, alignment=TA_LEFT)
+    abstract_body = ParagraphStyle('IEEEAbstractB', fontName='Times-Bold', fontSize=9, leading=11, alignment=TA_JUSTIFY, spaceAfter=12)
+    
+    h1_style = ParagraphStyle('IEEEH1', fontName='Times-Roman', fontSize=10, leading=12, alignment=TA_CENTER, spaceBefore=12, spaceAfter=6, textTransform='uppercase')
+    h2_style = ParagraphStyle('IEEEH2', fontName='Times-Italic', fontSize=10, leading=12, alignment=TA_LEFT, spaceBefore=6, spaceAfter=6)
+    
+    body_style = ParagraphStyle('IEEEBody', fontName='Times-Roman', fontSize=10, leading=12, alignment=TA_JUSTIFY, spaceAfter=6, firstLineIndent=0.15*inch)
+    ref_style = ParagraphStyle('IEEERef', fontName='Times-Roman', fontSize=8, leading=10, alignment=TA_LEFT, spaceAfter=4)
     
     story = []
     
-    # Title
-    story.append(Paragraph("Competitive Sentiment Analysis & Model Landscape Report", title_style))
-    story.append(Spacer(1, 10))
+    # ---------------- PAGE 1: TITLE & ABSTRACT (Single Column) ----------------
+    story.append(Paragraph("Comparative Evaluation of Transformer vs. Heuristic Models in E-Commerce Sentiment Analysis", title_style))
+    story.append(Paragraph("William<br/><i>Principal AI Researcher, NLP Division</i><br/>contact@nlp-division.local", author_style))
     
-    # 1. Executive Summary
-    story.append(Paragraph("1. Executive Summary", h1_style))
-    story.append(Paragraph("This decision-grade report assesses the current NLP model landscape for analyzing Amazon Product Reviews. The core finding is that transitioning from our traditional TF-IDF pipeline to an advanced DistilBERT architecture improves sentiment classification accuracy significantly. Concurrently, negative reviews expose product vulnerabilities spanning usability, quality, and delivery, dictating immediate operational adjustments.", body_style))
-    story.append(Paragraph("Key Takeaways:", body_style))
-    story.append(Paragraph("• <b>Model Superiority:</b> DistilBERT dominates the landscape across all metrics, achieving significantly higher F1-Scores than the legacy baselines. For NLP sentiment analysis, F1-Score is the critical benchmark as it balances false positives and false negatives, which is crucial for handling imbalanced text data.", bullet_style))
-    story.append(Paragraph("• <b>Primary Threats:</b> Topic modeling reveals acute user friction concerning product longevity and software compatibility.", bullet_style))
-    story.append(Paragraph("• <b>Strategic Move:</b> Deploy DistilBERT to triage severe negative reviews instantly to customer success teams.", bullet_style))
+    abstract_text = ("<b><i>Abstract</i>—This paper presents a comparative analysis of traditional heuristic-based machine learning "
+                     "models (Logistic Regression, Multinomial Naive Bayes) against a state-of-the-art contextual transformer "
+                     "(DistilBERT) for the task of sentiment classification on e-commerce product reviews. We evaluate models based "
+                     "on precision, recall, accuracy, and F1-score to account for class imbalance. Additionally, we employ Latent "
+                     "Dirichlet Allocation (LDA) to extract underlying thematic vulnerabilities from negative sentiment samples. "
+                     "Results demonstrate that the DistilBERT architecture significantly outperforms traditional methods, establishing "
+                     "a robust, highly accurate pipeline for automated customer feedback triage.</b>")
+    story.append(Paragraph(abstract_text, abstract_body))
     
-    # 2. Market Landscape & Category Framing
-    story.append(Paragraph("2. Model Landscape & Category Framing", h1_style))
-    story.append(Paragraph("The sentiment analysis landscape is divided into traditional heuristic-based models and modern contextual transformers. The chart below illustrates the positioning and competitive advantage of adopting advanced transformer models over our baseline approach.", body_style))
-    story.append(Image("accuracy_chart.png", width=400, height=230))
-    story.append(Spacer(1, 10))
+    story.append(Paragraph("<b><i>Index Terms</i>—Natural Language Processing, Sentiment Analysis, DistilBERT, TF-IDF, Topic Modeling.</b>", abstract_body))
     
-    # 3. Competitor Tiers
-    story.append(Paragraph("3. Model Tiers", h1_style))
-    story.append(Paragraph("<b>Direct / Aspirational Tier (DistilBERT):</b> Represents the modern, scalable solution capable of contextual understanding. Essential for nuanced sentiment detection.", bullet_style))
-    story.append(Paragraph("<b>Baseline Tier (TF-IDF + LR & Naive Bayes):</b> The legacy, capability-led approach. They provide solid but rigid benchmarks that struggle with sarcasm and deep context.", bullet_style))
+    # Switch to two-column for the rest of the paper
+    from reportlab.platypus.doctemplate import NextPageTemplate
+    story.append(NextPageTemplate('TwoCol'))
+    story.append(PageBreak())
     
-    # 4. Benchmarking Matrix
-    story.append(Paragraph("4. Benchmarking Matrix", h1_style))
-    story.append(Paragraph("Quantitative assessment across precision, recall, and accuracy dimensions.", body_style))
+    # ---------------- PAGE 2+: CONTENT (Two Columns) ----------------
+    story.append(Paragraph("I. INTRODUCTION", h1_style))
+    story.append(Paragraph("The rapid expansion of e-commerce has necessitated scalable, automated systems capable of ingesting and interpreting vast volumes of unstructured consumer feedback. Traditionally, Term Frequency-Inverse Document Frequency (TF-IDF) combined with linear classifiers provided a computationally inexpensive baseline. However, these methods inherently lack contextual awareness, struggling with linguistic nuances such as sarcasm, negation, and polysemy.", body_style))
+    story.append(Paragraph("Recent advancements in Natural Language Processing (NLP) have introduced transformer-based architectures, which leverage self-attention mechanisms to construct deeply contextualized representations of text. In this study, we benchmark the DistilBERT architecture—a lighter, faster variant of BERT—against legacy systems. Furthermore, we extract actionable intelligence from the negative subset of our corpus using Latent Dirichlet Allocation (LDA).", body_style))
     
+    story.append(Paragraph("II. METHODOLOGY", h1_style))
+    story.append(Paragraph("A. Baseline Models", h2_style))
+    story.append(Paragraph("Our heuristic baselines utilize a TF-IDF vectorization strategy (max_features=5000), feeding into a Logistic Regression (LR) model and a Multinomial Naive Bayes (NB) classifier. Both models are evaluated strictly on their macro-averaged F1-scores to mitigate the biases introduced by class imbalances in organic review datasets.", body_style))
+    
+    story.append(Paragraph("B. Transformer Architecture", h2_style))
+    story.append(Paragraph("We implemented DistilBERT (`distilbert-base-uncased`), a distilled version of the BERT model that reduces the size of a BERT model by 40% while retaining 97% of its language understanding capabilities. The model was fine-tuned using the HuggingFace `Trainer` API.", body_style))
+    
+    story.append(Paragraph("C. Topic Extraction", h2_style))
+    story.append(Paragraph("To derive actionable operational metrics, we isolated the subset of text classified as 'negative'. We applied LDA with 5 components to identify the latent themes driving negative consumer sentiment, effectively translating unstructured text into distinct failure domains.", body_style))
+    
+    story.append(Paragraph("III. RESULTS", h1_style))
+    story.append(Paragraph("A. Model Benchmarks", h2_style))
+    story.append(Paragraph("The quantitative results indicate a stark performance delta between heuristic and transformer architectures.", body_style))
+    
+    # Matrix Table
     lr_acc = baseline_metrics['lr_accuracy']
     lr_p = baseline_metrics['lr_report']['macro avg']['precision']
     lr_r = baseline_metrics['lr_report']['macro avg']['recall']
     lr_f1 = baseline_metrics['lr_report']['macro avg']['f1-score']
-    
     nb_acc = baseline_metrics['nb_accuracy']
     nb_p = baseline_metrics['nb_report']['macro avg']['precision']
     nb_r = baseline_metrics['nb_report']['macro avg']['recall']
     nb_f1 = baseline_metrics['nb_report']['macro avg']['f1-score']
-    
     t_acc = transformer_metrics['eval_accuracy']
     t_p = transformer_metrics['eval_precision']
     t_r = transformer_metrics['eval_recall']
     t_f1 = transformer_metrics['eval_f1']
     
     matrix_data = [
-        ["Model", "Accuracy", "Precision (Macro)", "Recall (Macro)", "F1-Score"],
-        ["TF-IDF + LR", f"{lr_acc:.1%}", f"{lr_p:.1%}", f"{lr_r:.1%}", f"{lr_f1:.1%}"],
-        ["Multinomial NB", f"{nb_acc:.1%}", f"{nb_p:.1%}", f"{nb_r:.1%}", f"{nb_f1:.1%}"],
-        ["DistilBERT", f"{t_acc:.1%}", f"{t_p:.1%}", f"{t_r:.1%}", f"{t_f1:.1%}"]
+        ["Model", "F1", "Acc"],
+        ["TF-IDF + LR", f"{lr_f1:.2f}", f"{lr_acc:.2f}"],
+        ["Multinomial NB", f"{nb_f1:.2f}", f"{nb_acc:.2f}"],
+        ["DistilBERT", f"{t_f1:.2f}", f"{t_acc:.2f}"]
     ]
     
-    t = Table(matrix_data, colWidths=[120, 80, 100, 100, 80])
+    t = Table(matrix_data, colWidths=[90, 40, 40])
     t.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2980b9')),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#dddddd')),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
-        ('BACKGROUND', (0, 1), (-1, 2), colors.HexColor('#ecf0f1')),
-        ('BACKGROUND', (0, 3), (-1, 3), colors.HexColor('#d5f5e3')), # Highlight DistilBERT
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('FONTNAME', (0, 0), (-1, 0), 'Times-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
     ]))
     story.append(t)
-    story.append(Paragraph("<i>* All metrics represent macro-averages to accurately reflect performance on imbalanced sentiment classes.</i>", ParagraphStyle('Small', parent=styles['Normal'], fontSize=9, textColor=colors.gray)))
+    story.append(Spacer(1, 10))
+    story.append(Paragraph("Table I. Performance metrics (macro-averaged) comparing baselines against the fine-tuned transformer.", ParagraphStyle('TableCaption', fontName='Times-Roman', fontSize=8, alignment=TA_CENTER, spaceAfter=12)))
     
-    story.append(PageBreak())
+    story.append(Paragraph("The transformer model achieved superior precision and recall distributions, confirming that self-attention mechanisms successfully parse complex semantic structures that deceive bag-of-words heuristics.", body_style))
     
-    # 5. Deep Dives
-    story.append(Paragraph("5. Deep Dives: Negative Review Themes", h1_style))
-    story.append(Paragraph("To understand the 'why' behind negative sentiment, Latent Dirichlet Allocation (LDA) was applied. This surfaces the critical topics driving customer dissatisfaction:", body_style))
+    story.append(Image("accuracy_chart.png", width=230, height=172))
+    story.append(Spacer(1, 10))
     
-    topic_data = [["Topic Area", "Key Terms Identified"]]
+    story.append(Paragraph("IV. DISCUSSION", h1_style))
+    story.append(Paragraph("While overall classification accuracy defines the systemic capability, the thematic extraction of negative instances defines operational value.", body_style))
+    
+    topic_data = [["Cluster", "Dominant Terms"]]
     for topic_id, terms in lda_topics.items():
-        topic_data.append([f"Theme {topic_id + 1}", terms])
+        topic_data.append([f"T{topic_id + 1}", terms])
         
-    t2 = Table(topic_data, colWidths=[100, 380])
+    t2 = Table(topic_data, colWidths=[40, 150])
     t2.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#34495e')),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f8f9f9')),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#dddddd')),
+        ('ALIGN', (0, 0), (0, -1), 'CENTER'),
+        ('ALIGN', (1, 0), (1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Times-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 8),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
     ]))
     story.append(t2)
+    story.append(Spacer(1, 10))
+    story.append(Paragraph("Table II. LDA Topics extracted from the negative sentiment subset, exposing hardware vulnerabilities.", ParagraphStyle('TableCaption', fontName='Times-Roman', fontSize=8, alignment=TA_CENTER, spaceAfter=12)))
     
-    # 6. White-space & Threats
-    story.append(Paragraph("6. White-space & Threats", h1_style))
-    story.append(Paragraph("<b>White-space:</b> The integration of contextual NLP with automated customer service triggers. Few competitors actively route frustrated customers based on nuanced semantic cues. This is our defensible moat.", body_style))
-    story.append(Paragraph("<b>Threats:</b> Product quality complaints identified in Theme 5 (switch, disk, broke, connector) indicate severe physical defects. If unaddressed, superior sentiment tracking will only document our decline.", body_style))
+    story.append(Paragraph("The clusters present acute hardware defects (e.g., connectors, switches). The pipeline proves its value not merely as a classifier, but as an early-warning radar for manufacturing non-conformance.", body_style))
     
-    # 7. Strategic Recommendations
-    story.append(Paragraph("7. Strategic Recommendations", h1_style))
-    story.append(Paragraph("Recommendations are sequenced by impact:", body_style))
-    story.append(Paragraph("<b>1. Deprecate Legacy Pipelines:</b> Transition entirely to the DistilBERT framework for all production sentiment inference.", bullet_style))
-    story.append(Paragraph("<b>2. Automated Routing:</b> Connect the DistilBERT output to the CRM. Any review classified as negative should instantly trigger a ticket for the customer success team.", bullet_style))
-    story.append(Paragraph("<b>3. R&D Feedback Loop:</b> Route topics related to 'connector/broke/disk' directly to the hardware engineering team. Quality control is the root cause of the friction.", bullet_style))
+    story.append(Paragraph("V. CONCLUSION", h1_style))
+    story.append(Paragraph("Deploying DistilBERT mitigates the rigid constraints of traditional TF-IDF classifiers, delivering highly contextual sentiment triage. We recommend fully deprecating the legacy models in production. Future work will investigate hybridizing DistilBERT with real-time routing logic to dispatch hardware-related defect reports directly to engineering teams.", body_style))
     
-    # 8. Sources / Methodology Appendix
-    story.append(Paragraph("8. Sources / Methodology Appendix", h1_style))
-    story.append(Paragraph("<b>Baseline:</b> Scikit-learn TF-IDF Vectorizer + Logistic Regression, evaluated via standard classification report.", bullet_style))
-    story.append(Paragraph(f"<b>Transformer:</b> HuggingFace DistilBERT-base-uncased, evaluated via Trainer API. Runtime: {transformer_metrics['eval_runtime']:.2f}s, Samples/sec: {transformer_metrics['eval_samples_per_second']:.2f}.", bullet_style))
-    story.append(Paragraph("<b>Topic Modeling:</b> Sklearn LatentDirichletAllocation on negative subsets, focusing on the top 5 components.", bullet_style))
-    
-    # Trigger Questions
-    story.append(Spacer(1, 15))
-    story.append(Paragraph("Team Alignment Trigger Questions:", h2_style))
-    story.append(Paragraph("• Is the engineering team prepared to ingest the hardware defect data surfaced by Theme 5?", bullet_style))
-    story.append(Paragraph("• What is the cost vs. latency tradeoff of deploying DistilBERT to our real-time edge servers?", bullet_style))
+    story.append(Paragraph("VI. REFERENCES", h1_style))
+    story.append(Paragraph("[1] V. Sanh, L. Debut, J. Chaumond, and T. Wolf, \"DistilBERT, a distilled version of BERT: smaller, faster, cheaper and lighter,\" <i>arXiv preprint arXiv:1910.01108</i>, 2019.", ref_style))
+    story.append(Paragraph("[2] A. Vaswani et al., \"Attention is all you need,\" in <i>Advances in Neural Information Processing Systems</i>, 2017, pp. 5998-6008.", ref_style))
+    story.append(Paragraph("[3] D. M. Blei, A. Y. Ng, and M. I. Jordan, \"Latent dirichlet allocation,\" <i>Journal of machine Learning research</i>, vol. 3, pp. 993-1022, 2003.", ref_style))
     
     doc.build(story)
     print("Report generated successfully as 'report.pdf'")
 
 if __name__ == "__main__":
-    generate_pdf_report()
+    build_pdf_report()
