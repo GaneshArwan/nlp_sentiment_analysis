@@ -1,68 +1,51 @@
 # E-Commerce Sentiment Analysis & Triage Pipeline
 
 ## Problem Statement
-Can customer sentiment be accurately classified from unstructured review text at scale, and what latent themes drive negative feedback? 
+Can customer sentiment be accurately classified from unstructured review text at scale, and what latent themes drive negative feedback?
 
-This project aims to automate the triage of e-commerce product reviews by classifying sentiment and extracting actionable operational intelligence (e.g., hardware defects, shipping delays) from negative reviews.
+## Dataset
+- **Source:** HuggingFace Hub (`mteb/amazon_reviews_multi`)
+- **Size:** 10,000 rows (sampled) × 4 features
+- **Description:** Amazon product reviews (English subset) with 1-5 star ratings. We mapped 1-2 stars as negative (0) and 4-5 stars as positive (1) to create a binary classification target, discarding ambiguous 3-star reviews.
 
-## Skills Demonstrated
-- **Natural Language Processing (NLP):** Tokenization, TF-IDF vectorization, Contextual embeddings.
-- **Machine Learning:** Logistic Regression, Multinomial Naive Bayes, DistilBERT (Transformer fine-tuning via HuggingFace).
-- **Unsupervised Learning:** Latent Dirichlet Allocation (LDA) for topic modeling.
-- **MLOps & Automation:** Automated PDF report generation (ReportLab), CI/CD pipelines (GitHub Actions), Security scanning (Bandit).
-
-## Deliverables
-- **Data Pipeline:** Automated ingestion and preprocessing using the HuggingFace `datasets` library.
-- **Classification Engine:** Comparative evaluation of heuristic models (TF-IDF + LR/NB) against a state-of-the-art transformer (`distilbert-base-uncased`).
-- **Topic Extractor:** LDA implementation targeting negative sentiment to cluster root causes.
-- **Automated Reporting:** An IEEE-formatted, academic-style PDF report summarizing system performance and business findings.
-
-## Methodology & Architecture
-1. **Data Ingestion:** Loads a subset of product reviews directly from the HuggingFace Hub.
-2. **Baseline Modeling:** Implements traditional TF-IDF vectorization (max_features=5000) coupled with Logistic Regression and Multinomial Naive Bayes.
-3. **Transformer Fine-Tuning:** Leverages PyTorch and the HuggingFace `Trainer` API to fine-tune DistilBERT, accommodating class imbalances by tracking macro-averaged F1, Precision, and Recall.
-4. **Topic Modeling:** Filters for negative reviews and applies a 5-component LDA model to extract dominant complaint themes.
-5. **Reporting:** Aggregates JSON metrics into a reproducible, two-column academic PDF using ReportLab and Seaborn.
+## Approach
+1. **Data Cleaning & EDA** — Filtered and mapped multi-class star ratings into binary sentiment labels, performing basic text sanitization.
+2. **Feature Engineering** — Applied TF-IDF vectorization (max 5000 features) for heuristic models, and leveraged deeply contextual embeddings via HuggingFace's `AutoTokenizer` for transformer models.
+3. **Modeling** — Evaluated traditional heuristic classifiers (Logistic Regression, Multinomial Naive Bayes) against a state-of-the-art contextual transformer (`distilbert-base-uncased`). Applied unsupervised Latent Dirichlet Allocation (LDA) on the negative predictions to extract topics.
+4. **Evaluation** — Tracked macro-averaged F1, Precision, and Recall alongside raw accuracy to ensure minority classes (negative reviews) were appropriately weighted in the evaluation.
 
 ## Key Results
-| Model | F1-Score | Accuracy |
-|-------|----------|----------|
-| TF-IDF + Logistic Regression | 0.72 | 0.83 |
-| Multinomial Naive Bayes | 0.61 | 0.82 |
-| DistilBERT | **0.87** | **0.87** |
-
-*Note: Results may vary slightly depending on the training seed and data splits.*
+| Metric | TF-IDF + LR | Multinomial NB | DistilBERT |
+|--------|-------|-------|-------|
+| F1-Score (Macro) | 0.72 | 0.61 | 0.87 |
+| Precision | 0.76 | 0.65 | 0.87 |
+| Accuracy | 0.83 | 0.82 | 0.87 |
 
 ## Key Findings
-1. **Contextual Superiority:** The DistilBERT architecture significantly outperforms heuristic baselines, particularly in resolving complex linguistic structures like sarcasm and negation that deceive bag-of-words models.
-2. **Hardware Defect Identification:** LDA topic extraction on negative reviews successfully clustered specific physical failure domains (e.g., connectors, switches), transforming unstructured complaints into actionable engineering alerts.
-3. **Operational Implication:** Relying strictly on accuracy metrics is deceptive in imbalanced datasets. Macro-averaged F1-scores confirm the transformer's superior ability to identify minority negative classes.
+1. DistilBERT achieved an F1-score of 0.87, significantly outperforming heuristic baselines (TF-IDF + LR at 0.72) in handling contextual nuances like sarcasm and negation.
+2. Unsupervised LDA topic modeling on negative reviews revealed 5 distinct complaint clusters, prominently exposing hardware and physical defects (e.g., connectors, switches, materials).
+3. **Business Implication:** Deploying a transformer-based classifier paired with LDA topic extraction allows businesses to automatically route unstructured product complaints directly to engineering or QA teams, reducing the need for manual triage.
 
 ## How to Run
-
-Ensure you have a Python 3.10+ environment.
-
 ```bash
 # 1. Install dependencies
 pip install -r requirements.txt
 
-# 2. Run the baseline models
+# 2. Run the baseline and transformer pipelines
 python src/baseline_models.py
-
-# 3. Fine-tune the transformer (Requires GPU for optimal performance)
 python src/transformer_finetune.py
 
-# 4. Run topic modeling on negative reviews
+# 3. Extract topics and generate the PDF report
 python src/topic_modeling.py
-
-# 5. Generate the final IEEE-style PDF report
 python src/report_generator.py
 ```
 
 ## Files
-- `src/data_loader.py` - HuggingFace dataset fetching and preparation.
-- `src/baseline_models.py` - TF-IDF and heuristic classifiers.
-- `src/transformer_finetune.py` - DistilBERT fine-tuning logic.
-- `src/topic_modeling.py` - LDA extraction on negative sentiment.
-- `src/report_generator.py` - Automated PDF generation.
-- `report.pdf` - The final generated academic output.
+- `src/` — Production-ready scripts containing data loaders, modeling pipelines, and the reporting engine.
+- `report.pdf` — The final generated IEEE-style academic evaluation report.
+- `baseline_metrics.json` / `transformer_metrics.json` — Raw evaluation output data.
+
+## Methodology & Limitations
+This project employs a comparative methodology, benchmarking computationally inexpensive bag-of-words models against modern attention-based transformers. By tracking precision, recall, and F1 alongside raw accuracy, the evaluation mitigates the deceptive metrics often found in imbalanced organic review data. The secondary phase utilizes unsupervised Latent Dirichlet Allocation (LDA) to group the negative predictions into actionable defect categories.
+
+**Limitations:** The dataset was heavily subsampled to 10,000 records to accommodate local training constraints. Consequently, the model's vocabulary and contextual understanding are constrained to the domains present in this subset. Additionally, the LDA topic extraction relies on a static 5-cluster assumption; in a true production environment, the optimal number of topics (`k`) would need to be determined dynamically using coherence scores. Finally, the pipeline currently lacks a live real-time inference endpoint, functioning instead as a batch reporting engine.
