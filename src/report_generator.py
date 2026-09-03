@@ -136,7 +136,7 @@ def build_pdf_report():
     
     story.append(Paragraph("III. RESULTS", h1_style))
     story.append(Paragraph("A. Model Benchmarks", h2_style))
-    story.append(Paragraph("The quantitative results indicate a stark performance delta between heuristic and transformer architectures. Analysis of 10,000 holdout records shows DistilBERT's superiority with >95% statistical confidence (p < 0.05), significantly reducing the risk of false-negative sentiment classification.", body_style))
+    story.append(Paragraph("The quantitative results indicate a stark performance delta between heuristic and transformer architectures.", body_style))
     
     # Matrix Table
     lr_acc = baseline_metrics['lr_accuracy']
@@ -159,7 +159,7 @@ def build_pdf_report():
         ["DistilBERT", f"{t_p:.2f}", f"{t_r:.2f}", f"{t_f1:.2f}", f"{t_acc:.2f}"]
     ]
     
-    t = Table(matrix_data, colWidths=[70, 45, 45, 40, 40])
+    t = Table(matrix_data, colWidths=[80, 45, 45, 30, 30])
     t.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#dddddd')),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
@@ -198,7 +198,7 @@ def build_pdf_report():
     story.append(Spacer(1, 10))
     story.append(Paragraph("Table II. LDA Topics extracted from the negative sentiment subset, exposing hardware vulnerabilities.", ParagraphStyle('TableCaption', fontName='Times-Roman', fontSize=8, alignment=TA_CENTER, spaceAfter=12)))
     
-    story.append(Paragraph("As shown in Table II, the clusters present acute hardware defects (e.g., connectors, switches). The pipeline proves its value not merely as a classifier, but as an early-warning radar for manufacturing non-conformance. This targeted defect identification is estimated to reduce manual triage engineering hours by up to 40% per reporting cycle, driving immediate ROI.", body_style))
+    story.append(Paragraph("As shown in Table II, the clusters present acute hardware defects (e.g., connectors, switches). The pipeline proves its value not merely as a classifier, but as an early-warning radar for manufacturing non-conformance.", body_style))
     
     story.append(Paragraph("V. CONCLUSION", h1_style))
     story.append(Paragraph("Deploying DistilBERT mitigates the rigid constraints of traditional TF-IDF classifiers, delivering highly contextual sentiment triage. We recommend fully deprecating the legacy models in production. Future work will investigate hybridizing DistilBERT with real-time routing logic to dispatch hardware-related defect reports directly to engineering teams.", body_style))
