@@ -171,7 +171,7 @@ def build_pdf_report():
     story.append(Spacer(1, 10))
     story.append(Paragraph("Table I. Performance metrics (macro-averaged) comparing baselines against the fine-tuned transformer.", ParagraphStyle('TableCaption', fontName='Times-Roman', fontSize=8, alignment=TA_CENTER, spaceAfter=12)))
     
-    story.append(Paragraph("The transformer model achieved superior precision and recall distributions, confirming that self-attention mechanisms successfully parse complex semantic structures that deceive bag-of-words heuristics.", body_style))
+    story.append(Paragraph("The transformer model achieved superior precision and recall distributions (see Fig. 1), confirming that self-attention mechanisms successfully parse complex semantic structures that deceive bag-of-words heuristics. Detailed macro-averaged metrics are provided in Table I.", body_style))
     
     story.append(Image("accuracy_chart.png", width=230, height=172))
     story.append(Spacer(1, 10))
@@ -198,7 +198,7 @@ def build_pdf_report():
     story.append(Spacer(1, 10))
     story.append(Paragraph("Table II. LDA Topics extracted from the negative sentiment subset, exposing hardware vulnerabilities.", ParagraphStyle('TableCaption', fontName='Times-Roman', fontSize=8, alignment=TA_CENTER, spaceAfter=12)))
     
-    story.append(Paragraph("The clusters present acute hardware defects (e.g., connectors, switches). The pipeline proves its value not merely as a classifier, but as an early-warning radar for manufacturing non-conformance.", body_style))
+    story.append(Paragraph("As shown in Table II, the clusters present acute hardware defects (e.g., connectors, switches). The pipeline proves its value not merely as a classifier, but as an early-warning radar for manufacturing non-conformance.", body_style))
     
     story.append(Paragraph("V. CONCLUSION", h1_style))
     story.append(Paragraph("Deploying DistilBERT mitigates the rigid constraints of traditional TF-IDF classifiers, delivering highly contextual sentiment triage. We recommend fully deprecating the legacy models in production. Future work will investigate hybridizing DistilBERT with real-time routing logic to dispatch hardware-related defect reports directly to engineering teams.", body_style))
