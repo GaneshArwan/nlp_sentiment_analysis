@@ -11,19 +11,21 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-@st.cache_data
+# Removed @st.cache_data to prevent stale data and permanent error lockouts
 def load_data(filepath):
     try:
         with open(filepath, 'r') as f:
             return json.load(f)
-    except Exception as e:
-        st.error(f"Error loading {filepath}: {str(e)}")
+    except Exception:
+        # Don't show st.error here to avoid cluttering if files just aren't generated yet
         return None
 
 def calc_ci(p, n):
+    n = max(int(n), 1)  # Prevent ZeroDivisionError
     return 1.96 * np.sqrt((p * (1 - p)) / n)
     
 def calc_composite_ci(p, n):
+    n = max(int(n), 1)  # Prevent ZeroDivisionError
     return 1.96 * np.sqrt(1.5 * (p * (1 - p)) / n)
 
 def main():
