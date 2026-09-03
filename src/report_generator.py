@@ -101,7 +101,7 @@ def build_pdf_report():
     
     # ---------------- PAGE 1: TITLE & ABSTRACT (Single Column) ----------------
     story.append(Paragraph("Comparative Evaluation of Transformer vs. Heuristic Models in E-Commerce Sentiment Analysis", title_style))
-    story.append(Paragraph("William<br/><i>Principal AI Researcher, NLP Division</i><br/>contact@nlp-division.local", author_style))
+    story.append(Paragraph("William<br/>wiliamzwili135@gmail.com", author_style))
     
     abstract_text = ("<b><i>Abstract</i>—This paper presents a comparative analysis of traditional heuristic-based machine learning "
                      "models (Logistic Regression, Multinomial Naive Bayes) against a state-of-the-art contextual transformer "
