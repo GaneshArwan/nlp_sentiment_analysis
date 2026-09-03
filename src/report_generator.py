@@ -180,8 +180,9 @@ def build_pdf_report():
     story.append(Paragraph("While overall classification accuracy defines the systemic capability, the thematic extraction of negative instances defines operational value.", body_style))
     
     topic_data = [["Cluster", "Dominant Terms"]]
+    cell_style = ParagraphStyle('TableCell', fontName='Times-Roman', fontSize=8, leading=10)
     for topic_id, terms in lda_topics.items():
-        topic_data.append([f"T{topic_id + 1}", terms])
+        topic_data.append([f"T{topic_id + 1}", Paragraph(terms, cell_style)])
         
     t2 = Table(topic_data, colWidths=[40, 150])
     t2.setStyle(TableStyle([
