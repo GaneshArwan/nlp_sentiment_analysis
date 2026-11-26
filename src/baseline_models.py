@@ -10,9 +10,9 @@ from pydantic import BaseModel, Field
 from data_loader import load_amazon_subset, DataConfig
 
 class BaselineConfig(BaseModel):
-    max_features: int = Field(default=5000)
-    lda_n_components: int = Field(default=5)
-    random_state: int = Field(default=42)
+    max_features: int = Field(default=5000, gt=0)
+    lda_n_components: int = Field(default=5, gt=0)
+    random_state: int = Field(default=42, ge=0)
 
 def train_sentiment_models(data: Dict[str, Any], config: BaselineConfig) -> Tuple[Dict[str, Any], TfidfVectorizer, Dict[str, Any]]:
     print("Training TF-IDF Baseline Models (Logistic Regression & Naive Bayes)...")
@@ -45,6 +45,7 @@ def train_sentiment_models(data: Dict[str, Any], config: BaselineConfig) -> Tupl
     print(f"NB Baseline Accuracy: {nb_acc:.4f}")
     
     metrics = {
+        'n_test_samples': len(y_test),
         'lr_accuracy': lr_acc,
         'lr_report': lr_report,
         'nb_accuracy': nb_acc,
@@ -63,6 +64,8 @@ def train_topic_model(data: Dict[str, Any], config: BaselineConfig) -> Tuple[Lat
     
     # Filter negative reviews from train set (label == 0)
     negative_reviews = data['train'].filter(lambda x: x['label'] == 0)['cleaned_text']
+    if not negative_reviews:
+        raise ValueError("No negative reviews available for LDA topic modeling.")
     
     tf_vectorizer = CountVectorizer(max_df=0.95, min_df=2, stop_words='english', max_features=config.max_features)
     tf = tf_vectorizer.fit_transform(negative_reviews)
@@ -82,7 +85,7 @@ def train_topic_model(data: Dict[str, Any], config: BaselineConfig) -> Tuple[Lat
         
     return lda, tf_vectorizer, topics
 
-def save_baseline_artifacts(metrics: Dict[str, Any], topics: Dict[int, str]):
+def save_baseline_artifacts(metrics: Dict[str, Any], topics: Dict[int, str]) -> None:
     with open('baseline_metrics.json', 'w') as f:
         json.dump(metrics, f, indent=4)
     with open('lda_topics.json', 'w') as f:

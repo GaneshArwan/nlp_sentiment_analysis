@@ -8,16 +8,22 @@ from data_loader import load_amazon_subset, DataConfig
 import evaluate
 
 class TransformerConfig(BaseModel):
-    model_name: str = Field(default="distilbert-base-uncased")
-    epochs: int = Field(default=1)
-    batch_size: int = Field(default=8)
+    model_name: str = Field(default="distilbert-base-uncased", min_length=1)
+    epochs: int = Field(default=1, gt=0)
+    batch_size: int = Field(default=8, gt=0)
+    seed: int = Field(default=42, ge=0)
 
-def finetune_transformer(data: Dict[str, Any], config: TransformerConfig):
+def finetune_transformer(data: Dict[str, Any], config: TransformerConfig) -> None:
     print(f"Fine-tuning {config.model_name}...")
     tokenizer = AutoTokenizer.from_pretrained(config.model_name, revision="main")  # nosec B615
-    model = AutoModelForSequenceClassification.from_pretrained(config.model_name, num_labels=2, revision="main")  # nosec B615
+    model = AutoModelForSequenceClassification.from_pretrained(
+        config.model_name,
+        num_labels=2,
+        revision="main",
+        use_safetensors=True,
+    )  # nosec B615
     
-    def tokenize_function(examples):
+    def tokenize_function(examples: Dict[str, Any]) -> Any:
         return tokenizer(examples["cleaned_text"], padding="max_length", truncation=True, max_length=128)
 
     tokenized_train = data['train'].map(tokenize_function, batched=True)
@@ -28,7 +34,7 @@ def finetune_transformer(data: Dict[str, Any], config: TransformerConfig):
     metric_r = evaluate.load("recall")
     metric_f1 = evaluate.load("f1")
 
-    def compute_metrics(eval_pred):
+    def compute_metrics(eval_pred: Any) -> Dict[str, float]:
         logits, labels = eval_pred
         predictions = torch.argmax(torch.tensor(logits), dim=-1)
         
@@ -51,6 +57,7 @@ def finetune_transformer(data: Dict[str, Any], config: TransformerConfig):
         per_device_eval_batch_size=config.batch_size,
         num_train_epochs=config.epochs,
         weight_decay=0.01,
+        seed=config.seed,
         eval_strategy="epoch",
         save_strategy="epoch",
         load_best_model_at_end=True

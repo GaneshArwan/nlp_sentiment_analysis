@@ -70,6 +70,9 @@ venv.bak/
 data/
 *.csv
 *.json
+!baseline_metrics.json
+!transformer_metrics.json
+!lda_topics.json
 *.sqlite3
 
 # Models
@@ -81,6 +84,8 @@ models/
 # Agentic / AI Tools
 .agents/
 .codegraph/
+docs/maestro/
 CONVERSATION_PATHS.md
+PORTFOLIO_GUIDE.md
 results/
 src/results/

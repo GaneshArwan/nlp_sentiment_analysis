@@ -4,9 +4,9 @@ from datasets import load_dataset
 from pydantic import BaseModel, Field
 
 class DataConfig(BaseModel):
-    dataset_name: str = Field(default="fancyzhx/amazon_polarity")
-    sample_size: int = Field(default=2000, description="Size of the subset to load for quicker processing")
-    seed: int = Field(default=42)
+    dataset_name: str = Field(default="fancyzhx/amazon_polarity", min_length=1)
+    sample_size: int = Field(default=2000, ge=5, description="Size of the subset to load for quicker processing")
+    seed: int = Field(default=42, ge=0)
 
 def clean_text(text: str) -> str:
     """Basic text cleaning."""
@@ -36,7 +36,7 @@ def load_amazon_subset(config: DataConfig) -> Dict[str, Any]:
     test_subset = dataset['test'].shuffle(seed=config.seed).select(range(int(config.sample_size * 0.2)))
     
     # Process text
-    def process_batch(examples):
+    def process_batch(examples: Dict[str, List[Any]]) -> Dict[str, List[str]]:
         # amazon_polarity has 'content' and 'label' (0 for negative, 1 for positive)
         cleaned = [clean_text(doc) for doc in examples['content']]
         return {'cleaned_text': cleaned}
