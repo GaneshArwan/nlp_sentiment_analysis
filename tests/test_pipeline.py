@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib
+import importlib.util
 import json
 import math
 import sys
@@ -25,6 +26,11 @@ if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
+
+# Allow offline CI without GPU/HF packages installed to import config & pure helpers
+for _opt_mod in ("datasets", "torch", "transformers", "evaluate"):
+    if importlib.util.find_spec(_opt_mod) is None and _opt_mod not in sys.modules:
+        sys.modules[_opt_mod] = MagicMock()
 
 import baseline_models  # noqa: E402
 import data_loader  # noqa: E402

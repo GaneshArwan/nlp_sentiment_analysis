@@ -441,7 +441,7 @@ def build_pdf_report() -> None:
     story.append(Paragraph("Comparative Benchmarking of Heuristic Baselines vs. Fine-Tuned DistilBERT with LDA Topic Discovery", s_subtitle))
     story.append(
         Paragraph(
-            f"<b>Author:</b> William (wiliamzwili135@gmail.com) &nbsp;|&nbsp; "
+            f"<b>Repository:</b> GaneshArwan/nlp_sentiment_analysis &nbsp;|&nbsp; "
             f"<b>Dataset:</b> fancyzhx/amazon_polarity &nbsp;|&nbsp; "
             f"<b>Test Split:</b> N={n_test} ({pos_pct:.2f}% Pos / {neg_pct:.2f}% Neg) &nbsp;|&nbsp; "
             f"<b>Seed:</b> 42",
