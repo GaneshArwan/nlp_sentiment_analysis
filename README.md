@@ -1,5 +1,6 @@
 # E-Commerce Sentiment Classification & Complaint Triage
 
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://ecommerce-sentiment-triage.streamlit.app/)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/GaneshArwan/nlp_sentiment_analysis/blob/main/notebooks/nlp_sentiment_pipeline.ipynb)
 
 Benchmarking TF-IDF linear and probabilistic baselines against fine-tuned DistilBERT (`distilbert-base-uncased`) on Amazon product reviews, paired with Latent Dirichlet Allocation (LDA) topic extraction on negative reviews for automated complaint triage.
@@ -38,6 +39,8 @@ Bag-of-words models miss negation, multi-word sentiment reversals, and sarcasm i
 ![Heuristic Baseline Class-Level Breakdown](class_metrics_chart.png)
 
 ## Quick Start
+
+**Live Dashboard:** [https://ecommerce-sentiment-triage.streamlit.app/](https://ecommerce-sentiment-triage.streamlit.app/)
 
 ### 1. Run the Dashboard Locally (Lightweight)
 
